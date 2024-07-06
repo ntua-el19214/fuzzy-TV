@@ -1,0 +1,53 @@
+% Dummy script to test the Dynamics function
+
+% Define a dummy vehicle structure
+vehicle.mass = 270; % kg
+vehicle.wd = 0.5; % weight distribution (percentage of mass on the front axle)
+vehicle.trackFront = 1.24; % m (track width at the front)
+vehicle.trackRear = 1.5; % m (track width at the rear)
+vehicle.wb = 2.5; % m (wheelbase)
+vehicle.CoGz = 0.5; % m (height of center of gravity)
+vehicle.Reff = 0.3; % m (effective radius of the wheels)
+vehicle.InertiaZ = 3000; % kg.m^2 (yaw inertia)
+vehicle.Jw = 2; % kg.m^2 (wheel inertia)
+
+% Define initial conditions for the state vector
+% [vx, vy, yawRate, ax, ay, yawAcc, omegaRR, omegaRL]
+initialState = [0; 0; 0; 0; 0; 0; 0; 0];
+
+% Define a dummy steering angle
+steeringAngle = 0; % radians
+
+% Define the time span for the simulation
+tspan = [0 10]; % simulate from 0 to 10 seconds
+
+% Call the ODE solver
+[t, result] = ode45(@(t, vector) Dynamics(t, vector, vehicle, steeringAngle), tspan, initialState);
+
+% Plot the results
+figure;
+subplot(3, 1, 1);
+plot(t, result(:, 1), 'DisplayName', 'vx'); hold on;
+plot(t, result(:, 2), 'DisplayName', 'vy');
+plot(t, result(:, 3), 'DisplayName', 'yawRate');
+xlabel('Time (s)');
+ylabel('Velocity (m/s) and Yaw Rate (rad/s)');
+title('Velocities and Yaw Rate');
+legend;
+
+subplot(3, 1, 2);
+plot(t, result(:, 4), 'DisplayName', 'ax'); hold on;
+plot(t, result(:, 5), 'DisplayName', 'ay');
+plot(t, result(:, 6), 'DisplayName', 'yawAcc');
+xlabel('Time (s)');
+ylabel('Acceleration (m/s^2) and Yaw Acceleration (rad/s^2)');
+title('Accelerations');
+legend;
+
+subplot(3, 1, 3);
+plot(t, result(:, 7), 'DisplayName', 'omegaRR'); hold on;
+plot(t, result(:, 8), 'DisplayName', 'omegaRL');
+xlabel('Time (s)');
+ylabel('Wheel Angular Speed (rad/s)');
+title('Rear Wheel Angular Speeds');
+legend;
