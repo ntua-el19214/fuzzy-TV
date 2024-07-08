@@ -16,9 +16,9 @@ vehicle.Jw = 0.06; % kg.m^2 (wheel inertia)
 % [vx, vy, yawRate, ax, ay, yawAcc, omegaRR, omegaRL, distanceX, distanceY, thetaZ]
 initialState = [0.01; 0; 0; 0; 0; 0; 0.01/vehicle.Reff; 0.01/vehicle.Reff; 0; 0; 0];
 
-tspan = [0 6];
+tspan = [0 3];
 % Define the steering angle as a sinusoidal input
-steeringInput =@(t) 0.1*sin(t / 5);
+steeringInput =@(t) 0.1*sin(t * 2);
 
 % Call the ODE solver
 [t, result, slipAnglesMatrix] = ode45(@(t, vector) Dynamics(t, vector, vehicle, steeringInput(t)), tspan, initialState);
