@@ -1,11 +1,14 @@
-function value = MotorTorque(currentTime, throttle)
-% Check if currentTime is within the totalTime
-if currentTime <= 0.1
-    % Linearly interpolate the value based on the current time
-    value = (200 / 0.1) * currentTime*throttle;
-else
-    % If currentTime exceeds totalTime, the value is capped at maxValue
-    value = 200*throttle;
-end
-end
+function torque = MotorTorque(currentTime, throttle, vehicle, motorSpeed)
+% Maximum torque achievable by the motor
+maxTorque = vehicle.Motors(motorSpeed);
+% Total ramp-up time in seconds
+rampUpTime = 0.1;
 
+if currentTime <= rampUpTime
+    % Linearly interpolate the torque based on the current time
+    torque = (maxTorque ./ rampUpTime) * currentTime * throttle;
+else
+    % After ramp-up time, the torque is capped at maxTorque
+    torque = maxTorque * throttle;
+end
+end
