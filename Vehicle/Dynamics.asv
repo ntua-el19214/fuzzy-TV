@@ -25,14 +25,26 @@ wheelForces.rearRight.Fz  = vehicle.mass*g*(1-vehicle.wd)/2 + vehicle.CoGz*vehic
 wheelForces.rearLeft.Fz   = vehicle.mass*g*(1-vehicle.wd)/2 - vehicle.CoGz*vehicle.mass*ay/2/vehicle.trackFront + vehicle.CoGz*vehicle.mass*ax/2/vehicle.wb + 1/2*1/4*1.22*5.7*vx^2;
 
 % Wheel speeds
-speedRR = (vx + yawRate*vehicle.trackRear);
-speedRL = (vx - yawRate*vehicle.trackRear);
+speedRR = (vx + yawRate*vehicle.trackRear/2);
+speedRL = (vx - yawRate*vehicle.trackRear/2);
 
-% Calculate slip ratios
+%% Calculate slip ratios
 slipFR = 0;
 slipFL = 0;
-slipRR = 2*(omegaRR*vehicle.Reff - speedRR)./(0.3 + speedRR.^2/0.3).*(abs(omegaRR*vehicle.Reff) < 0.3) + (omegaRR*vehicle.Reff - speedRR)/abs(speedRR).*(abs(omegaRR*vehicle.Reff) >= 0.3) ;
-slipRL = 2*(omegaRL*vehicle.Reff - speedRL)./(0.3 + speedRL.^2/0.3).*(abs(omegaRL*vehicle.Reff) < 0.3) + (omegaRL*vehicle.Reff - speedRL)/abs(speedRL).*(abs(omegaRL*vehicle.Reff) >= 0.3) ;
+
+% Calculate RR slip ratio
+if abs(omegaRR * vehicle.Reff) < 0.3
+    slipRR = 2 * (omegaRR * vehicle.Reff - speedRR) / (0.3 + speedRR^2 / 0.3);
+else
+    slipRR = (omegaRR * vehicle.Reff - speedRR) / abs(speedRR);
+end
+
+% Calculate RL slip ratio
+if abs(omegaRL * vehicle.Reff) < 0.3
+    slipRL = 2 * (omegaRL * vehicle.Reff - speedRL) / (0.3 + speedRL^2 / 0.3);
+else
+    slipRL = (omegaRL * vehicle.Reff - speedRL) / abs(speedRL);
+end
 
 % Calculate slip angles
 slipAngleFR = atan((vy + vehicle.wb * (1-vehicle.wd) * yawRate)/(vx + vehicle.trackFront/2*yawRate)) - steeringAngle;
@@ -41,16 +53,16 @@ slipAngleRR = atan((vy - vehicle.wb * vehicle.wd * yawRate)/(vx + vehicle.trackR
 slipAngleRL = atan((vy - vehicle.wb * vehicle.wd * yawRate)/(vx - vehicle.trackRear/2*yawRate));
 
 % Longitudinal Wheel Forces
-wheelForces.frontRight.Fx = F_longit(slipAngleFR, slipFR, wheelForces.frontRight.Fz, 0);
-wheelForces.frontLeft.Fx  = F_longit(slipAngleFL, slipFL, wheelForces.frontLeft.Fz, 0);
-wheelForces.rearRight.Fx  = F_longit(slipAngleRR, slipRR, wheelForces.rearRight.Fz, 0);
-wheelForces.rearLeft.Fx   = F_longit(slipAngleRL, slipRL, wheelForces.rearLeft.Fz, 0);
+wheelForces.frontRight.Fx = F_longit(slipAngleFR, slipFR, wheelForces.frontRight.Fz, deg2rad(-0.5));
+wheelForces.frontLeft.Fx  = F_longit(slipAngleFL, slipFL, wheelForces.frontLeft.Fz, deg2rad(-0.5));
+wheelForces.rearRight.Fx  = F_longit(slipAngleRR, slipRR, wheelForces.rearRight.Fz, deg2rad(-0.5));
+wheelForces.rearLeft.Fx   = F_longit(slipAngleRL, slipRL, wheelForces.rearLeft.Fz, deg2rad(-0.5));
 
 % Lateral Wheel Forces
-wheelForces.frontRight.Fy = F_lateral(slipAngleFR, slipFR, wheelForces.frontRight.Fz, 0);
-wheelForces.frontLeft.Fy  = F_lateral(slipAngleFL, slipFL, wheelForces.frontLeft.Fz, 0);
-wheelForces.rearRight.Fy  = F_lateral(slipAngleRR, slipRR, wheelForces.rearRight.Fz, 0);
-wheelForces.rearLeft.Fy   = F_lateral(slipAngleRL, slipRL, wheelForces.rearLeft.Fz, 0);
+wheelForces.frontRight.Fy = F_lateral(slipAngleFR, slipFR, wheelForces.frontRight.Fz, deg2rad(-0.5));
+wheelForces.frontLeft.Fy  = F_lateral(slipAngleFL, slipFL, wheelForces.frontLeft.Fz, deg2rad(-0.5));
+wheelForces.rearRight.Fy  = F_lateral(slipAngleRR, slipRR, wheelForces.rearRight.Fz, deg2rad(-0.5));
+wheelForces.rearLeft.Fy   = F_lateral(slipAngleRL, slipRL, wheelForces.rearLeft.Fz, deg2rad(-0.5));
 
 % Self Aligning wheel moments (Placeholder)
 wheelForces.frontRight.Mz = 0;
@@ -78,14 +90,15 @@ wheelMzMatrix = [wheelForces.frontRight.Mz;...
 
 steerAngle = [steeringAngle;...
               steeringAngle;...
-              0;...
+              0            ;...
               0];
 
 % Y-Axis Distance of wheels from the CoG
 halfTrack = [-vehicle.trackFront/2;...
               vehicle.trackFront/2;...
-             -vehicle.trackRear/2;...
+             -vehicle.trackRear/2 ;...
               vehicle.trackRear/2];
+
 % X-Axis Distance of wheels from the CoG
 xDistCoG = [ vehicle.wb * (1-vehicle.wd);...
              vehicle.wb * (1-vehicle.wd);...
@@ -97,15 +110,16 @@ tempFxVector = wheelFxMatrix.*cos(steerAngle) - wheelFyMatrix.*sin(steerAngle);
 tempFyVector = wheelFyMatrix.*cos(steerAngle) + wheelFxMatrix.*sin(steerAngle);
 
 % Longitudinal Acceleration
-accelX  = sum(tempFxVector)/vehicle.mass + yawRate.*vy - 0.5*1.22*1.2*vx^2;
+accelX  = sum(tempFxVector)/vehicle.mass + yawRate.*vy - 0.5*1.22*1.2*vx^2/vehicle.mass;
 % Lateral Acceleration
 accelY  = sum(tempFyVector)/vehicle.mass - yawRate.*vx;
 % Yaw acceleration
 accelJz = (sum(wheelMzMatrix) + sum(tempFyVector.*xDistCoG) + sum(tempFxVector.*halfTrack))/vehicle.InertiaZ;
 
 % Define dummy motor torques (placeholders)
-TmotorRight = MotorTorque(t, 1, omegaRR/); % Nm 
-TmotorLeft = MotorTorque(t, 1);  % Nm 
+TmotorRight = MotorTorque(t, 0.2, vehicle, omegaRR*vehicle.GR) * vehicle.GR; % Nm 
+TmotorLeft = MotorTorque(t, 0.2, vehicle, omegaRL*vehicle.GR) * vehicle.GR;  % Nm 
+
 % Rear wheel angular accelaration
 accelJwRR = (TmotorRight - wheelForces.rearRight.Fx * vehicle.Reff )/vehicle.Jw;
 accelJwRL = (TmotorLeft - wheelForces.rearLeft.Fx * vehicle.Reff )/vehicle.Jw;

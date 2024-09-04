@@ -1,7 +1,7 @@
 % Dummy script to test the Dynamics function
 % Define the time span and number of steps
 a = 0;
-b = 2;
+b = 4;
 N = 100000;
 % Define the Butcher tableau for a 4th-order Runge-Kutta method (example)
 A = [0 0 0 0;
@@ -12,26 +12,27 @@ bhta = [1/6; 1/3; 1/3; 1/6];
 tau = [0; 0.5; 0.5; 1];
 
 % Define a dummy vehicle structure
-vehicle.mass = 270; % kg
-vehicle.wd = 0.5; % weight distribution (percentage of mass on the front axle)
-vehicle.trackFront = 1.24; % m (track width at the front)
-vehicle.trackRear = 1.24; % m (track width at the rear)
-vehicle.wb = 1.57; % m (wheelbase)
-vehicle.CoGz = 0.3; % m (height of center of gravity)
-vehicle.Reff = 0.2; % m (effective radius of the wheels)
-vehicle.InertiaZ = 200; % kg.m^2 (yaw inertia)
-vehicle.Jw = 0.06; % kg.m^2 (wheel inertia)
+vehicle.mass = 270;         % kg
+vehicle.wd = 0.5;           % weight distribution (percentage of mass on the front axle)
+vehicle.trackFront = 1.24;  % m (track width at the front)
+vehicle.trackRear = 1.24;   % m (track width at the rear)
+vehicle.wb = 1.57;          % m (wheelbase)
+vehicle.CoGz = 0.3;         % m (height of center of gravity)
+vehicle.Reff = 0.2;         % m (effective radius of the wheels)
+vehicle.InertiaZ = 73.1250; % kg.m^2 (yaw inertia)
+vehicle.Jw = 0.06;          % kg.m^2 (wheel inertia)
+vehicle.GR = 15;            % Gear ratio
 vehicle.Motors = Motors('AMK-FSAE Motors Data.xlsx');
 
 % Define initial conditions for the state vector
 % [vx, vy, yawRate, ax, ay, yawAcc, omegaRR, omegaRL, distanceX, distanceY, thetaZ]
-initialState = [0.01; 0; 0; 0; 0; 0; 0.01 / vehicle.Reff; 0.01 / vehicle.Reff; 0; 0; 0];
+initialState = [10; 0; 0; 0; 0; 0; 0.01 / vehicle.Reff; 0.01 / vehicle.Reff; 0; 0; 0];
 
 % Define Input
-steeringInput = 0;
+steeringInput = @(t) deg2rad(20)*sin(t);
 
 % Call the RKESys function
-[t, result, ax] = RKESys(a, b, N, @(t, Y, vehicle, steeringInput) Dynamics(t, Y, vehicle, steeringInput), initialState, A, bhta, tau, vehicle, steeringInput);
+[t, result, ax] = RKESys(a, b, N, @(t, Y, vehicle, steeringInput) Dynamics(t, Y, vehicle, steeringInput(t)), initialState, A, bhta, tau, vehicle, steeringInput);
 
 % Plot the results
 figure;

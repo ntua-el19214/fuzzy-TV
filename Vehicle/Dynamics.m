@@ -28,15 +28,18 @@ wheelForces.rearLeft.Fz   = vehicle.mass*g*(1-vehicle.wd)/2 - vehicle.CoGz*vehic
 speedRR = (vx + yawRate*vehicle.trackRear/2);
 speedRL = (vx - yawRate*vehicle.trackRear/2);
 
-% Calculate slip ratios
+%% Calculate slip ratios
 slipFR = 0;
 slipFL = 0;
+
+% Calculate RR slip ratio
 if abs(omegaRR * vehicle.Reff) < 0.3
     slipRR = 2 * (omegaRR * vehicle.Reff - speedRR) / (0.3 + speedRR^2 / 0.3);
 else
     slipRR = (omegaRR * vehicle.Reff - speedRR) / abs(speedRR);
 end
 
+% Calculate RL slip ratio
 if abs(omegaRL * vehicle.Reff) < 0.3
     slipRL = 2 * (omegaRL * vehicle.Reff - speedRL) / (0.3 + speedRL^2 / 0.3);
 else
@@ -87,14 +90,15 @@ wheelMzMatrix = [wheelForces.frontRight.Mz;...
 
 steerAngle = [steeringAngle;...
               steeringAngle;...
-              0;...
+              0            ;...
               0];
 
 % Y-Axis Distance of wheels from the CoG
 halfTrack = [-vehicle.trackFront/2;...
               vehicle.trackFront/2;...
-             -vehicle.trackRear/2;...
+             -vehicle.trackRear/2 ;...
               vehicle.trackRear/2];
+
 % X-Axis Distance of wheels from the CoG
 xDistCoG = [ vehicle.wb * (1-vehicle.wd);...
              vehicle.wb * (1-vehicle.wd);...
@@ -113,8 +117,9 @@ accelY  = sum(tempFyVector)/vehicle.mass - yawRate.*vx;
 accelJz = (sum(wheelMzMatrix) + sum(tempFyVector.*xDistCoG) + sum(tempFxVector.*halfTrack))/vehicle.InertiaZ;
 
 % Define dummy motor torques (placeholders)
-TmotorRight = MotorTorque(t, 0.5, vehicle, omegaRR*vehicle.GR) * vehicle.GR; % Nm 
-TmotorLeft = MotorTorque(t, 0.5, vehicle, omegaRL*vehicle.GR) * vehicle.GR;  % Nm 
+TmotorRight = MotorTorque(t, 0.2, vehicle, omegaRR*vehicle.GR) * vehicle.GR; % Nm 
+TmotorLeft = MotorTorque(t, 0.2, vehicle, omegaRL*vehicle.GR) * vehicle.GR;  % Nm 
+
 % Rear wheel angular accelaration
 accelJwRR = (TmotorRight - wheelForces.rearRight.Fx * vehicle.Reff )/vehicle.Jw;
 accelJwRL = (TmotorLeft - wheelForces.rearLeft.Fx * vehicle.Reff )/vehicle.Jw;
