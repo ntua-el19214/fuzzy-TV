@@ -1,8 +1,14 @@
 % Dummy script to test the Dynamics function
+
+% Add files to current path
+addpath(genpath('./'))
+
 % Define the time span and number of steps
 a = 0;
 b = 4;
 N = 100000;
+
+timeStep = (b-a)/N;
 % Define the Butcher tableau for a 4th-order Runge-Kutta method (example)
 A = [0 0 0 0;
      0.5 0 0 0;
@@ -26,14 +32,17 @@ vehicle.Motors = Motors('AMK-FSAE Motors Data.xlsx');
 
 % Define initial conditions for the state vector
 % [vx, vy, yawRate, ax, ay, yawAcc, omegaRR, omegaRL, distanceX, distanceY, thetaZ]
-initialState = [10; 0; 0; 0; 0; 0; 0.01 / vehicle.Reff; 0.01 / vehicle.Reff; 0; 0; 0];
+initialState = [10; 0; 0; 0; 0; 0; 10 / vehicle.Reff; 10 / vehicle.Reff; 0; 0; 0];
 
 % Define Input
 steeringInput = @(t) deg2rad(20)*sin(t);
+targetVx      = 15;
+targetYawRate = 0;
 
 % Call the RKESys function
-[t, result, ax] = RKESys(a, b, N, @(t, Y, vehicle, steeringInput) Dynamics(t, Y, vehicle, steeringInput(t)), initialState, A, bhta, tau, vehicle, steeringInput);
+[t, result, ax] = RKESys(a, b, N, @(t, Y, vehicle, steeringInput, targetVx, targetYawRate) Dynamics(t, Y, vehicle, steeringInput(t), targetVx, targetYawRate, timeStep), initialState, A, bhta, tau, vehicle, steeringInput);
 
+vehicle.wheel
 % Plot the results
 figure;
 
@@ -89,3 +98,15 @@ xlabel('Time (s)');
 ylabel('Angle (rad)');
 title('Yaw Angle');
 legend;
+
+% Plot steering angle
+figure('Name','Steering Angle')
+plot(t, steeringInput(t))
+xlabel('Time [s]')
+ylabel('Steering Angle [deg]')
+
+% Figure, attempt to plot trajectory 
+tp = theaterPlot;
+view(14,50)
+trajPlotter = trajectoryPlotter(tp,DisplayName="Trajectories");
+plotTrajectory(trajPlotter,{[result(9,:)',result(10,:)', zeros(N+1,1)]})

@@ -1,7 +1,8 @@
-function dvdt = Dynamics(t, vector, vehicle, steeringAngle)
+function dvdt = Dynamics(t, vector, vehicle, steeringAngle, targetVx, targetYawRate, vxPrev, yawRatePrev, timeStep)
 % DYNAMICS Describes all the dynamic equations needed to model a 4 Wheel 
 % Vehicle with the Reduced nonlinear double-track method
-
+% Declare integral variables for PID controller 
+global yawRateIntegral vxIntegral; 
 % Define Vector Values
 vx      = vector(1);
 vy      = vector(2);
@@ -16,6 +17,10 @@ distanceY = vector(10);
 thetaZ = vector(11);
 
 g = 9.81;
+
+% Calculate integral errors
+yawRateIntegral = yawRateIntegral +  targetYawRate - yawRate;
+vxIntegral      = vxIntegral + targetVx - vx;
 
 %% Calculate forces 
 % Vertical Wheel Forces
@@ -117,8 +122,14 @@ accelY  = sum(tempFyVector)/vehicle.mass - yawRate.*vx;
 accelJz = (sum(wheelMzMatrix) + sum(tempFyVector.*xDistCoG) + sum(tempFxVector.*halfTrack))/vehicle.InertiaZ;
 
 % Define dummy motor torques (placeholders)
-TmotorRight = MotorTorque(t, 0.2, vehicle, omegaRR*vehicle.GR) * vehicle.GR; % Nm 
-TmotorLeft = MotorTorque(t, 0.2, vehicle, omegaRL*vehicle.GR) * vehicle.GR;  % Nm 
+% TmotorRight = MotorTorque(t, 0.2, vehicle, omegaRR*vehicle.GR) * vehicle.GR; % Nm 
+% TmotorLeft = MotorTorque(t, 0.2, vehicle, omegaRL*vehicle.GR) * vehicle.GR;  % Nm 
+
+% Calculate torque requests
+[axleTorque, torqueSplit] = Controller(targetVx, targetYawRate, vx, yawRate, timeStep, vxPrev, yawRatePrev, yawRateIntegral, vxIntegral);
+
+TmotorRight = MotorTorque(t, vehicle, omegaRR*vehicle.GR) * vehicle.GR; % Nm 
+TmotorLeft = MotorTorque(t, vehicle, omegaRL*vehicle.GR) * vehicle.GR;  % Nm 
 
 % Rear wheel angular accelaration
 accelJwRR = (TmotorRight - wheelForces.rearRight.Fx * vehicle.Reff )/vehicle.Jw;
