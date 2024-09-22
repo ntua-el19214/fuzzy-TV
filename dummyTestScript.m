@@ -35,14 +35,19 @@ vehicle.Motors = Motors('AMK-FSAE Motors Data.xlsx');
 initialState = [10; 0; 0; 0; 0; 0; 10 / vehicle.Reff; 10 / vehicle.Reff; 0; 0; 0];
 
 % Define Input
-steeringInput = @(t) deg2rad(20)*sin(t);
+steeringInput = deg2rad(20);
 targetVx      = 15;
 targetYawRate = 0;
 
+global yawRateIntegral vxIntegral;
+yawRateIntegral = 0;
+vxIntegral      = 0;
 % Call the RKESys function
-[t, result, ax] = RKESys(a, b, N, @(t, Y, vehicle, steeringInput, targetVx, targetYawRate) Dynamics(t, Y, vehicle, steeringInput(t), targetVx, targetYawRate, timeStep), initialState, A, bhta, tau, vehicle, steeringInput);
+F = @(t, Y, Yprev, vehicle, steeringAngle, targetVx, targetYawRate, timeStep)...
+    Dynamics(t, Y, Yprev, vehicle, steeringInput, targetVx, targetYawRate, timeStep);
 
-vehicle.wheel
+[t, result, ax] = RKESys(a, b, N, F, initialState, A, bhta, tau, vehicle, steeringInput, targetVx, targetYawRate, timeStep);
+
 % Plot the results
 figure;
 
@@ -99,11 +104,11 @@ ylabel('Angle (rad)');
 title('Yaw Angle');
 legend;
 
-% Plot steering angle
-figure('Name','Steering Angle')
-plot(t, steeringInput(t))
-xlabel('Time [s]')
-ylabel('Steering Angle [deg]')
+% % Plot steering angle
+% figure('Name','Steering Angle')
+% plot(t, steeringInput(t))
+% xlabel('Time [s]')
+% ylabel('Steering Angle [deg]')
 
 % Figure, attempt to plot trajectory 
 tp = theaterPlot;

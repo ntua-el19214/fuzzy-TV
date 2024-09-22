@@ -1,6 +1,5 @@
-function [t, Y, ax] = RKESys(a, b, N, F, Y0, A, bhta, tau, vehicle, steeringInput)
-global Ci;
-Ci = 0;
+function [t, Y, ax] = RKESys(a, b, N, F, Y0, A, bhta, tau, vehicle, steeringAngle, targetVx, targetYawRate, timeStep)
+
 
 rng('default');
 rng(2024);
@@ -24,7 +23,7 @@ for n = 1:N
         for j = 1:q
             sm1 = sm1 + h * A(i, j) * Kn(:, j);
         end
-        Kn(:, i) = F(tn(i), Y(:, n) + sm1, vehicle, steeringInput);
+        Kn(:, i) = F(tn(i), Y(:, n) + sm1, Y(:, n), vehicle, steeringAngle, targetVx, targetYawRate, timeStep);
     end
     
     sm2 = zeros(M, 1);

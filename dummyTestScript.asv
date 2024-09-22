@@ -39,10 +39,15 @@ steeringInput = @(t) deg2rad(20)*sin(t);
 targetVx      = 15;
 targetYawRate = 0;
 
+global yawRateIntegral vxIntegral;
+yawRateIntegral = 0;
+vxIntegral      = 0;
 % Call the RKESys function
-[t, result, ax] = RKESys(a, b, N, @(t, Y, vehicle, steeringInput, targetVx, targetYawRate) Dynamics(t, Y, vehicle, steeringInput(t), targetVx, targetYawRate, timeStep), initialState, A, bhta, tau, vehicle, steeringInput);
+F = @(t, Y, Yprev, vehicle, steeringAngle, targetVx, targetYawRate, timeStep)...
+    Dynamics(t, Y, Yprev, vehicle, steeringInput(t), targetVx, targetYawRate, timeStep);
 
-vehicle.wheel
+[t, result, ax] = RKESys(a, b, N, F, initialState, A, bhta, tau, vehicle, steeringAngle, targetVx, targetYawRate, timeStep);
+
 % Plot the results
 figure;
 
