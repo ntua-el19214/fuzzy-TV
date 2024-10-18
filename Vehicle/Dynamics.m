@@ -129,10 +129,13 @@ vxPrev      = Yprev(1);
 yawRatePrev = Yprev(3);
 
 % Calculate torque requests
-[axleTorque, torqueSplit] = Controller(targetVx, targetYawRate, vx, yawRate, timeStep, vxPrev, yawRatePrev, yawRateIntegral, vxIntegral);
+RRTireMaxF = vehicle.TireMaxFx(slipAngleRR, wheelForces.rearRight.Fz);
+RLTireMaxF = vehicle.TireMaxFx(slipAngleRL, wheelForces.rearLeft.Fz);
+[FxR, FxL] = Controller(targetVx, targetYawRate, vx, yawRate, timeStep, vxPrev, yawRatePrev, yawRateIntegral, vxIntegral,vehicle, RRTireMaxF, RLTireMaxF);
 
-TmotorRight = MotorTorque(vehicle, omegaRR*vehicle.GR, axleTorque/vehicle.GR, 0.5 + torqueSplit) * vehicle.GR;    % Nm 
-TmotorLeft  = MotorTorque(vehicle, omegaRL*vehicle.GR, axleTorque/vehicle.GR, 0.5 - torqueSplit) * vehicle.GR;  % Nm 
+% Rear wheel driven only
+TmotorRight = MotorTorque(vehicle, omegaRR*vehicle.GR, FxR, RRTireMaxF) * vehicle.GR;  % Nm 
+TmotorLeft  = MotorTorque(vehicle, omegaRL*vehicle.GR, FxL, RLTireMaxF) * vehicle.GR;  % Nm 
 
 % Rear wheel angular accelaration
 accelJwRR = (TmotorRight - wheelForces.rearRight.Fx * vehicle.Reff )/vehicle.Jw;

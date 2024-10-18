@@ -1,14 +1,13 @@
-function torqueSplit = yawMoment2TorqueSplit(yawMomentCommand)
+function deltaForce = yawMoment2TorqueSplit(yawMomentCommand, RRTireMaxFx, RLTireMaxFx, vehicle)
 %YAWMOMENT2TORQUESPLIT Summary of this function goes here
 %   Detailed explanation goes here
 
-% Arbitrary value
-maxYawMomentCommand = 200;
-
 % Calculate percentage of yaw moment, either positive, or negative
+% (positive -> left turn -> RR outside wheel)
+% (negative -> right turn -> RL outside wheel)
 signYawMoment   = sign(yawMomentCommand);
-% Torque split of 1 means 100% of power is sent to the outside wheel
-torqueSplit     = signYawMoment * max(yawMomentCommand/maxYawMomentCommand, 1)/2; 
+% calculate wheel force delta to achieve said 
+deltaForce = min(signYawMoment * yawMomentCommand/vehicle.trackRear, max(RRTireMaxFx, RLTireMaxFx));
 
 end
 

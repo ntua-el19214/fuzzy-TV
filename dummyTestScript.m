@@ -28,14 +28,15 @@ vehicle.Reff = 0.2;         % m (effective radius of the wheels)
 vehicle.InertiaZ = 73.1250; % kg.m^2 (yaw inertia)
 vehicle.Jw = 0.06;          % kg.m^2 (wheel inertia)
 vehicle.GR = 15;            % Gear ratio
-vehicle.Motors = Motors('AMK-FSAE Motors Data.xlsx');
+vehicle.Motors   = Motors('AMK-FSAE Motors Data.xlsx');
+vehicle.TireMaxFx= maxFxForSaFzCombination();
 
-% Define initial conditions for the state vector
+%% Define initial conditions for the state vector
 % [vx, vy, yawRate, ax, ay, yawAcc, omegaRR, omegaRL, distanceX, distanceY, thetaZ]
 initialState = [10; 0; 0; 0; 0; 0; 10 / vehicle.Reff; 10 / vehicle.Reff; 0; 0; 0];
 
 % Define Input
-steeringInput = deg2rad(20);
+steeringInput = 0;
 targetVx      = 15;
 targetYawRate = 0;
 
@@ -50,7 +51,7 @@ F = @(t, Y, Yprev, vehicle, steeringAngle, targetVx, targetYawRate, timeStep)...
 
 % Plot the results
 figure;
-
+%
 % Velocities and Yaw Rate
 subplot(3, 2, 1);
 plot(t, result(1, :), 'DisplayName', 'vx'); hold on;
